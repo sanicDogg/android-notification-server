@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# Put this script to your Termux device and run to send notifications
 # Configuration (Replace with your actual Deno server IP)
-SERVER_URL="http://192.168.31.173:8000/notify"
+SERVER_URL="http://localhost:8001/abc/notify"
 SLEEP_INTERVAL=2
 
 # Global tracking array
