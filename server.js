@@ -1,3 +1,5 @@
+const SECRET_PATH = "/abc"
+
 const clients = new Set();
 const history = [];
 const MAX_HISTORY = 50;
@@ -13,7 +15,7 @@ async function handler(req) {
   logVerbose("HTTP_REQUEST", `${req.method} request to ${url.pathname}`);
 
   // 1. Web UI (English)
-  if (req.method === "GET" && url.pathname === "/") {
+  if (req.method === "GET" && url.pathname === SECRET_PATH) {
     const historyHtml = history
       .map(data => `
             <div class="card">
@@ -44,7 +46,7 @@ async function handler(req) {
         <h2>Android Notifications Stream</h2>
         <div id="logs">${historyHtml}</div>
         <script>
-          const evtSource = new EventSource("/events");
+          const evtSource = new EventSource(\`${SECRET_PATH}/events\`);
           evtSource.onopen = () => console.log("SSE connection established.");
           evtSource.onerror = (err) => console.error("SSE connection error:", err);
           
@@ -70,7 +72,7 @@ async function handler(req) {
   }
 
   // 2. SSE Channel
-  if (req.method === "GET" && url.pathname === "/events") {
+  if (req.method === "GET" && url.pathname === `${SECRET_PATH}/events`) {
     let controllerRef;
 
     const stream = new ReadableStream({
@@ -80,12 +82,11 @@ async function handler(req) {
         logVerbose("SSE_STATUS", `Client connected. Total active clients: ${clients.size}`);
       },
       cancel() {
-        // Этот метод может не вызваться вовремя при резком обрыве сокета браузером
         if (controllerRef) clients.delete(controllerRef);
       },
     });
 
-    // Гарантированный триггер: срабатывает сразу, как только HTTP-запрос прерывается (обновление страницы)
+    // Delete client, if page refresh
     req.signal.addEventListener("abort", () => {
       if (controllerRef) {
         clients.delete(controllerRef);
@@ -103,7 +104,7 @@ async function handler(req) {
   }
 
   // 3. API Endpoint
-  if (req.method === "POST" && url.pathname === "/notify") {
+  if (req.method === "POST" && url.pathname === `${SECRET_PATH}/notify`) {
     try {
       const body = await req.json();
       logVerbose("API_INBOUND", "Received payload data from Termux", body);
@@ -154,5 +155,8 @@ async function handler(req) {
   return new Response("Not Found", { status: 404 });
 }
 
-logVerbose("SERVER_START", "Deno notification server is running on http://localhost:8000");
-Deno.serve({ port: 8000 }, handler);
+export default {
+  fetch(req) {
+    return handler(req);
+  }
+};
