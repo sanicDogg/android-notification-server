@@ -1,7 +1,15 @@
+Here we install nginx on a Termux Android device 
+to share our files 
+
+```
 pkg install jq
+```
 
+```
 nano $PREFIX/etc/nginx/nginx.conf
+```
 
+```
 location / {
     #root   /data/data/com.termux/files/usr/share/nginx/html;
     #index  index.html index.htm;
@@ -12,5 +20,8 @@ location / {
     autoindex_localtime on;
     charset utf-8;
 }
+```
 
+```
 nano send_notify.sh
+```
