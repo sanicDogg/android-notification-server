@@ -3,6 +3,7 @@ name: Node.js CI/CD (Deploy to Server)
 on:
   push:
     branches: [ main ] # On push to main
+  workflow_dispatch:
 
 env:
   TARGET_DIR: "/var/www/android-notification-server"
