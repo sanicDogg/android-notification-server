@@ -1,0 +1,48 @@
+name: Node.js CI/CD (Deploy to Server)
+
+on:
+  push:
+    branches: [ main ] # On push to main
+
+env:
+  TARGET_DIR: "/var/www/android-notification-server"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+
+    - name: Install dependencies and Build
+      run: |
+        npm ci
+        npm run build
+
+    - name: Deploy to Server
+      uses: easingthemes/ssh-deploy@v6.0.3
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+        ARGS: "-rlgoDIVz --delete" # rsync args 
+        SOURCE: "dist/"            # src to copy
+        REMOTE_HOST: ${{ secrets.SSH_HOST }}
+        REMOTE_USER: ${{ secrets.SSH_USER }}
+        REMOTE_PORT: ${{ secrets.SSH_PORT }}
+        TARGET: "${{ env.TARGET_DIR }}/dist"
+
+    - name: Restart PM2 process
+      uses: appleboy/ssh-action@v1.2.5
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd $TARGET_DIR
+          pm2 restart android-notification-server || pm2 start dist/app.js --name android-notification-server
