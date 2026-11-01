@@ -1,8 +1,8 @@
-import type { AndroidPushLog } from '../../db/schema';
+import type { NotificationPayload } from '../../db/schema';
 // Import prefered db instance
 
 export class PushesService {
-  async savePush(payload: AndroidPushLog) {
+  async savePush(payload: NotificationPayload) {
     // Insert to SQLite logic. With better-sqlite3:
     // const stmt = db.prepare('INSERT INTO pushes (appName, packageName, title, text, receivedAt) VALUES (?, ?, ?, ?, ?)');
     // stmt.run(payload.appName, payload.packageName, payload.title, payload.text, new Date().toISOString());
