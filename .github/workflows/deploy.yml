@@ -26,6 +26,20 @@ jobs:
         npm ci
         npm run build
 
+    - name: Debug Info (IP and Dist Folder Content)
+      run: |
+        echo "=== Connection info ==="
+        echo "IP from GitHub Secrets:"
+
+        echo "${{ secrets.SSH_HOST }}" | sed 's/\([0-9]*\)\.\([0-9]*\)\..*/\1.\2.X.X/'
+        
+        echo -e "\n=== dist folder ==="
+        if [ -d "dist" ]; then
+          ls -la dist/
+        else
+          echo "Error: dist doesn't exist!"
+        fi
+
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@v6.0.3
       with:
