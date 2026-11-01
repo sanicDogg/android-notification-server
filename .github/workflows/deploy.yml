@@ -49,14 +49,7 @@ jobs:
         REMOTE_HOST: ${{ secrets.SSH_HOST }}
         REMOTE_USER: ${{ secrets.SSH_USER }}
         REMOTE_PORT: ${{ secrets.SSH_PORT }}
-        TARGET: "${{ env.TARGET_DIR }}/dist"
-
-    - name: Copy dist to Server via SCP
-      run: |
-        echo "${{ secrets.SSH_KEY }}" > deploy_key
-        chmod 600 deploy_key
-        scp -P ${{ secrets.SSH_PORT }} -i deploy_key -o StrictHostKeyChecking=no -r dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/dist_transfer
-        rm deploy_key
+        TARGET: ${{ env.TARGET_DIR }}
 
     - name: Restart PM2 process
       uses: appleboy/ssh-action@v1.2.5
