@@ -19,4 +19,4 @@ app.route('/api/pushes', pushesRouter);
 
 export default app;
 
-serve({ fetch: app.fetch, port: 3000 });
+serve({ fetch: app.fetch, hostname: '127.0.0.1', port: 3000 });
