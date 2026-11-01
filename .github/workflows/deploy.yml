@@ -40,16 +40,18 @@ jobs:
           echo "Error: dist doesn't exist!"
         fi
 
-    - name: Deploy to Server
-      uses: easingthemes/ssh-deploy@v6.0.3
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-        ARGS: "-rlgoDIVz --delete" # rsync args 
-        SOURCE: "dist/"            # src to copy
-        REMOTE_HOST: ${{ secrets.SSH_HOST }}
-        REMOTE_USER: ${{ secrets.SSH_USER }}
-        REMOTE_PORT: ${{ secrets.SSH_PORT }}
-        TARGET: ${{ env.TARGET_DIR }}
+    - name: Copy dist to Server via rsync
+      run: |
+        echo "${{ secrets.SSH_KEY }}" > deploy_key
+        chmod 600 deploy_key
+
+        rsync -avz --delete \
+          -e "ssh -p ${{ secrets.SSH_PORT }} -i deploy_key -o StrictHostKeyChecking=no" \
+          dist/ \
+          ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.TARGET_DIR }}
+
+        rm deploy_key
+
 
     - name: Restart PM2 process
       uses: appleboy/ssh-action@v1.2.5
