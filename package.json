@@ -1,0 +1,33 @@
+{
+  "name": "android-notification-server",
+  "version": "1.0.0",
+  "description": "A server for Mux Android",
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx --watch src/app.ts",
+    "build": "tsup src/app.ts --format esm --clean",
+    "start": "node dist/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanicDogg/android-notification-server.git"
+  },
+  "author": "sait386@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sanicDogg/android-notification-server/issues"
+  },
+  "homepage": "https://github.com/sanicDogg/android-notification-server#readme",
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
