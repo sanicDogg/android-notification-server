@@ -86,9 +86,10 @@ pushesRouter.get('/events', async (c) => {
       console.log(`[SSE] Client disconnected. Left: ${ee.listenerCount('push')} clinets`);
     });
 
-    // Loop for Hono 
+    // Loop for Hono (Heartbeat ping)
     while (!stream.aborted) {
-      await stream.sleep(30000); // Heartbeat ping
+      await stream.sleep(30000);
+      await stream.writeSSE({ data: '', event: 'ping' });
     }
   });
 });
