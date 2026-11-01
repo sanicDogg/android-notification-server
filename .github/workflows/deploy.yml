@@ -62,5 +62,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           . ~/.nvm/nvm.sh
-          cd $TARGET_DIR
-          pm2 restart android-notification-server || pm2 start dist/app.js --name android-notification-server
+          cd $TARGET_DIR            
+          pm2 restart android-notification-server || pm2 start ${{ env.TARGET_DIR }}/dist/app.js \
+          --name android-notification-server \
+          --cwd ${{ env.TARGET_DIR }}
