@@ -1,0 +1,1 @@
+deno serve --port 8000 ./tiny-server.js
