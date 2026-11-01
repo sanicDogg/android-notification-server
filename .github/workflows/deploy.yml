@@ -61,6 +61,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          source ~/.bashrc
+          . ~/.nvm/nvm.sh
           cd $TARGET_DIR
           pm2 restart android-notification-server || pm2 start dist/app.js --name android-notification-server
