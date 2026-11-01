@@ -1,8 +1,16 @@
-export interface AndroidPushLog {
-  id?: number;
-  appName: string;
+// Based on Kotlin model;
+export interface NotificationPayload {
+  id: string;
   packageName: string;
-  title: string;
-  text: string;
-  receivedAt: string;
+  appName?: string | null;
+  title?: string | null;
+  text?: string | null;
+  subText?: string | null;
+  bigText?: string | null;
+  postTime: number;
+  timestampIso: string;
+  channelId?: string | null;
+  notificationKey?: string | null;
+  type: string;
+  isOngoing: boolean;
 }

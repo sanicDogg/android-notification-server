@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { EventEmitter } from 'events';
 import { PushesService } from './pushes.service';
+import type { NotificationPayload } from '../../db/schema';
 
 export const pushesRouter = new Hono();
 const pushesService = new PushesService();
@@ -14,27 +15,49 @@ pushesRouter.post('/', async (c) => {
   try {
     const body = await c.req.json();
     
-    // Minimal validation
-    if (!body.text || !body.packageName) {
-      return c.json({ error: 'Invalid payload' }, 400);
-    }
+    // Validation
+    const processItem = async (item: Partial<NotificationPayload>) => {
+      if (!item.id || !item.packageName) {
+        throw new Error('Missing required fields: id or packageName');
+      }
 
-    const payload = {
-      appName: body.appName || 'Unknown',
-      packageName: body.packageName,
-      title: body.title || '',
-      text: body.text,
-      receivedAt: new Date().toISOString()
-    }
+      const payload: NotificationPayload = {
+        id: item.id,
+        packageName: item.packageName,
+        appName: item.appName || 'Unknown',
+        title: item.title || '',
+        text: item.text || item.bigText || item.subText || '',
+        subText: item.subText || null,
+        bigText: item.bigText || null,
+        postTime: item.postTime || Date.now(),
+        timestampIso: item.timestampIso || new Date().toISOString(),
+        channelId: item.channelId || null,
+        notificationKey: item.notificationKey || null,
+        type: item.type || 'NOTIFICATION',
+        isOngoing: item.isOngoing ?? false
+      };
 
-    await pushesService.savePush(payload);
+      await pushesService.savePush(payload);
 
     // Trigger event
-    ee.emit('push', payload);
+      ee.emit('push', payload);
+    };
 
-    return c.json({ success: true, status: 'Saved' }, 201);
+    if (Array.isArray(body)) {
+      console.log(`[API] Processing a batch of ${body.length} notifications`);
+
+      for (const item of body) {
+        await processItem(item);
+      }
+    } else {
+      console.log(`[API] Processing single notification from: ${body.packageName}`);
+      await processItem(body);
+    }
+
+    return c.json({ success: true, status: 'Processed successfully' }, 201);
   } catch (error) {
-    return c.json({ error: 'Server Error', details: (error as Error).message }, 500);
+    console.error('[API_ERROR]', (error as Error).message);
+    return c.json({ error: 'Bad Request', details: (error as Error).message }, 400);
   }
 });
 
@@ -47,7 +70,7 @@ pushesRouter.get('/', async (c) => {
 // SSE realtime channel
 pushesRouter.get('/events', async (c) => {
   return streamSSE(c, async (stream) => {
-    const handler = async (data: any) => {
+    const handler = async (data: NotificationPayload) => {
       await stream.writeSSE({
         data: JSON.stringify(data),
         event: 'message',
@@ -65,7 +88,7 @@ pushesRouter.get('/events', async (c) => {
 
     // Loop for Hono 
     while (!stream.aborted) {
-      await stream.sleep(30000);
+      await stream.sleep(30000); // Heartbeat ping
     }
   });
 });
