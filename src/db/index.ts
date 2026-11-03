@@ -1,20 +1,24 @@
+import { DatabaseSync } from 'node:sqlite';
 import { drizzle } from 'drizzle-orm/node-sqlite';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 
-import { DatabaseSync } from 'node:sqlite';
+import { getDbPath, isProduction } from '../utils';
 import * as path from 'node:path';
 import * as schema from './schema';
 
-const DB_PATH = 'sqlite.db';
+const DB_PATH = getDbPath();
+console.log('[DB] Initializing SQLite database at:', DB_PATH);
 
 const sqlite = new DatabaseSync(DB_PATH);
 
 export const db = drizzle(DB_PATH, { schema } as any);
 
 function runMigrations() {
-  const migrationsFolder = path.join(process.cwd(), 'drizzle');
+  const migrationsFolder = isProduction
+    ? import.meta.dirname
+    : path.join(process.cwd(), 'drizzle');
   
-  console.log('[DB] Checking and applying migrations...');
+  console.log('[DB] Applying migrations from: %s', migrationsFolder);
   
   try {
     migrate(db, { migrationsFolder });

@@ -64,6 +64,8 @@ jobs:
         script: |
           . ~/.nvm/nvm.sh
           cd $TARGET_DIR            
-          pm2 restart android-notification-server || pm2 start ${{ env.TARGET_DIR }}/app.js \
-          --name android-notification-server \
-          --cwd ${{ env.TARGET_DIR }}
+          pm2 restart android-notification-server || pm2 start app.js \
+            --name android-notification-server \
+            --cwd ${{ env.TARGET_DIR }} \
+            --interpreter "$NODE_PATH" \
+            --env "NODE_ENV=production,DATABASE_PATH=/var/www/android-notification/"
