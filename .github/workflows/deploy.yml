@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  TARGET_DIR: "/var/www/android-notification-server"
+  TARGET_DIR: "/var/www/android-notification/backend"
 
 jobs:
   build-and-deploy:
@@ -21,9 +21,10 @@ jobs:
       with:
         node-version: 22
 
-    - name: Install dependencies and Build
+    - name: Install dependencies, generate migrations and build
       run: |
         npm ci
+        npm run db:generate
         npm run build
 
     - name: Debug Info (IP and Dist Folder Content)
