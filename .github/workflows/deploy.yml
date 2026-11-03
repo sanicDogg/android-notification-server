@@ -64,17 +64,17 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           . ~/.nvm/nvm.sh
-          cd $TARGET_DIR
+          cd ${{ env.TARGET_DIR }}
           cat << EOF > ecosystem.config.js
           module.exports = {
             apps: [
               {
                 name: 'android-notification-server',
                 script: 'app.js',
-                cwd: $TARGET_DIR,
+                cwd: '${{ env.TARGET_DIR }}',
                 env: {
                   NODE_ENV: 'production',
-                  DATABASE_PATH: $DATABASE_DIR
+                  DATABASE_PATH: '${{ env.DATABASE_DIR }}'
                 }
               }
             ]
