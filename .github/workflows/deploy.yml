@@ -7,6 +7,7 @@ on:
 
 env:
   TARGET_DIR: "/var/www/android-notification/backend"
+  DATABASE_DIR: "/var/www/android-notification/"
 
 jobs:
   build-and-deploy:
@@ -63,9 +64,20 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           . ~/.nvm/nvm.sh
-          cd $TARGET_DIR            
-          pm2 restart android-notification-server || pm2 start app.js \
-            --name android-notification-server \
-            --cwd ${{ env.TARGET_DIR }} \
-            --interpreter "$NODE_PATH" \
-            --env "NODE_ENV=production,DATABASE_PATH=/var/www/android-notification/"
+          cd $TARGET_DIR
+          cat << EOF > ecosystem.config.js
+          module.exports = {
+            apps: [
+              {
+                name: 'android-notification-server',
+                script: 'app.js',
+                cwd: $TARGET_DIR,
+                env: {
+                  NODE_ENV: 'production',
+                  DATABASE_PATH: $DATABASE_DIR
+                }
+              }
+            ]
+          };
+          EOF
+          pm2 startOrReload ecosystem.config.js
