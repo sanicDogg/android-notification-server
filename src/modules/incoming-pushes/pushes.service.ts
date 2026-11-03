@@ -6,8 +6,14 @@ import type { NotificationPayload } from '../../db/schema';
 export class PushesService {
   async savePush(payload: NotificationPayload) {
     try {
-      await db.insert(pushes).values(payload);
-      console.log(`[DB] Saved push from ${payload.appName}`);
+      await db
+        .insert(pushes)
+        .values(payload)
+        .onConflictDoUpdate({
+          target: pushes.id,
+          set: payload,
+        });;
+      console.log(`[DB] Updated or saved push from ${payload.appName}`);
       return { success: true };
     } catch (error) {
       console.error('[DB_ERROR] Failed to save push:', error);
