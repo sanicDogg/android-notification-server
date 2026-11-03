@@ -7,3 +7,7 @@ const baseDir = process.env.DATABASE_PATH || process.cwd();
 export const getDbPath = () => path.isAbsolute(baseDir) 
   ? path.join(baseDir, 'sqlite.db') 
   : path.resolve(process.cwd(), baseDir, 'sqlite.db');
+
+export const getLaunchedMode = () => isProduction 
+  ? 'production' : 'development';
+  

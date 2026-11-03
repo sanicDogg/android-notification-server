@@ -5,6 +5,8 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { pushesRouter } from './modules/incoming-pushes/pushes.controller';
 
+import { getLaunchedMode } from './utils';
+
 const app = new Hono();
 
 // Embedded tiny logger
@@ -19,4 +21,6 @@ app.route('/api/pushes', pushesRouter);
 
 export default app;
 
-serve({ fetch: app.fetch, hostname: '127.0.0.1', port: 3000 });
+const options = { hostname: '127.0.0.1', port: 3000 };
+serve({ fetch: app.fetch,  ...options });
+console.log('\n*** Running in %s mode with options: %o ***\n', getLaunchedMode(), options);
