@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { EventEmitter } from 'events';
 import { PushesService } from './pushes.service';
+import { ClientManager } from '../../honoHelpers';
 import type { NotificationPayload } from '../../db/schema';
 
 export const pushesRouter = new Hono();
@@ -9,6 +10,7 @@ const pushesService = new PushesService();
 const ee = new EventEmitter();
 
 ee.setMaxListeners(100);
+const clientManager = new ClientManager(ee);
 
 // HTTP Post from Android route
 pushesRouter.post('/', async (c) => {
@@ -67,6 +69,14 @@ pushesRouter.get('/', async (c) => {
   return c.json(list);
 });
 
+// Get current connections
+pushesRouter.get('/connections', (c) => {
+  return c.json({
+    total: clientManager.size,
+    clients: clientManager.getAll()
+  });
+});
+
 pushesRouter.delete('/', async (c) => {
   try {
     await pushesService.deleteAllPushes();
@@ -92,23 +102,30 @@ pushesRouter.delete('/:id', async (c) => {
 // SSE realtime channel
 pushesRouter.get('/events', async (c) => {
   return streamSSE(c, async (stream) => {
-    const handler = async (data: NotificationPayload) => {
+    const clientId = Math.random().toString(36).substring(2, 11);
+    clientManager.add(clientId, c);
+    console.log(`[SSE] Client connected: ${clientId}. Total: ${clientManager.size}`);
+
+    const handler = async (eventData: any) => {
       await stream.writeSSE({
-        data: JSON.stringify(data),
+        data: JSON.stringify(eventData),
         event: 'message',
       });
     };
 
     ee.on('push', handler);
 
-    console.log(`[SSE] Client connected. Total: ${ee.listenerCount('push')} clients`);
+    await stream.writeSSE({
+      data: JSON.stringify({ type: 'WELCOME', YourId: clientId }),
+      event: 'message'
+    });
 
     stream.onAbort(() => {
       ee.off('push', handler);
-      console.log(`[SSE] Client disconnected. Left: ${ee.listenerCount('push')} clinets`);
+      clientManager.remove(clientId);
+      console.log(`[SSE] Client disconnected: ${clientId}. Left: ${clientManager.size}`);
     });
 
-    // Loop for Hono (Heartbeat ping)
     while (!stream.aborted) {
       await stream.sleep(30000);
       await stream.writeSSE({ data: '', event: 'ping' });
