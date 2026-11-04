@@ -39,7 +39,7 @@ pushesRouter.post('/', async (c) => {
 
       await pushesService.savePush(payload);
 
-    // Trigger event
+      // Trigger event
       ee.emit('push', payload);
     };
 
@@ -65,6 +65,28 @@ pushesRouter.post('/', async (c) => {
 pushesRouter.get('/', async (c) => {
   const list = await pushesService.getAllPushes();
   return c.json(list);
+});
+
+pushesRouter.delete('/', async (c) => {
+  try {
+    await pushesService.deleteAllPushes();
+    ee.emit('push', { type: 'CLEAR_ALL' });
+    return c.json({ success: true, message: 'All notifications deleted' });
+  } catch (error) {
+    return c.json({ error: 'Internal Server Error', details: (error as Error).message }, 500);
+  }
+});
+
+// DELETE /api/pushes/:id
+pushesRouter.delete('/:id', async (c) => {
+  const id = c.req.param('id');
+  try {
+    await pushesService.deletePushById(id);
+    ee.emit('push', { type: 'DELETED', id });
+    return c.json({ success: true, message: `Notification ${id} deleted` });
+  } catch (error) {
+    return c.json({ error: 'Internal Server Error', details: (error as Error).message }, 500);
+  }
 });
 
 // SSE realtime channel
