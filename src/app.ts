@@ -1,9 +1,9 @@
-
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { pushesRouter } from './modules/incoming-pushes/pushes.controller';
+import { deviceStateRouter } from './modules/device-state/deviceState.controller';
 
 import { getLaunchedMode } from './utils';
 
@@ -16,8 +16,9 @@ app.use('*', cors({
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 
-// Connect our module to /api/pushes
+// Connect our modules
 app.route('/api/pushes', pushesRouter);
+app.route('/api/device-state', deviceStateRouter);
 
 export default app;
 
