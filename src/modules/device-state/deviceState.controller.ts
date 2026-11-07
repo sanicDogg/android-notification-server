@@ -24,13 +24,16 @@ deviceStateRouter.post(
       }
       return {
         batteryLevel: item.batteryLevel,
+        isCharging: item.isCharging ?? false,
         isWifiConnected: item.isWifiConnected,
         wifiName: item.wifiName || null,
         isCellularConnected: item.isCellularConnected ?? false,
         signalStrength: item.signalStrength || 'NONE',
         cellularOperator: item.cellularOperator || null,
+        cellularOperators: item.cellularOperators || [],
         isAirplaneModeOn: item.isAirplaneModeOn ?? false,
         isBluetoothOn: item.isBluetoothOn ?? false,
+        bluetoothName: item.bluetoothName || '',
         isVpnActive: item.isVpnActive ?? false,
         isMediaPlaying: item.isMediaPlaying ?? false,
         isHeadphonesConnected: item.isHeadphonesConnected ?? false,
@@ -42,6 +45,7 @@ deviceStateRouter.post(
         timestamp: item.timestamp || Date.now(),
         timestampIso: item.timestampIso || new Date().toISOString(),
         trigger: item.trigger || null,
+        type: item.type || 'DEVICE_STATE',
       };
     },
     onProcessItem: async (payload) => {

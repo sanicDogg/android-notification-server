@@ -22,13 +22,16 @@ export const deviceState = sqliteTable('device_state', {
   deviceId: text('device_id').primaryKey(), // nothing_phone(1)
   
   batteryLevel: integer('battery_level').notNull(),
+  isCharging: integer('is_charging', { mode: 'boolean' }).notNull().default(false),
   isWifiConnected: integer('is_wifi_connected', { mode: 'boolean' }).notNull(),
   wifiName: text('wifi_name'),
   isCellularConnected: integer('is_cellular_connected', { mode: 'boolean' }).notNull().default(false),
-  signalStrength: text('signal_strength').notNull().default('NONE'),
+  signalStrength: text('signal_strength').notNull().default('none'),
   cellularOperator: text('cellular_operator'),
+  cellularOperators: text('cellular_operators', { mode: 'json' }).$type<string[]>().notNull().default([]), 
   isAirplaneModeOn: integer('is_airplane_mode_on', { mode: 'boolean' }).notNull().default(false),
   isBluetoothOn: integer('is_bluetooth_on', { mode: 'boolean' }).notNull().default(false),
+  bluetoothName: text('bluetooth_name').notNull().default(''),
   isVpnActive: integer('is_vpn_active', { mode: 'boolean' }).notNull().default(false),
   isMediaPlaying: integer('is_media_playing', { mode: 'boolean' }).notNull().default(false),
   isHeadphonesConnected: integer('is_headphones_connected', { mode: 'boolean' }).notNull().default(false),
