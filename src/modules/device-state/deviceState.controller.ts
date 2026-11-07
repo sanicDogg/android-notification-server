@@ -4,24 +4,25 @@ import { Hono } from 'hono';
 import { DeviceStateService, SINGLE_DEVICE_ID } from './deviceState.service';
 import type { DeviceStatePayload } from '../../db/schema';
 import { globalEventEmitter } from '../events.controller';
+import { createBatchHandler } from '../shared/createBatchHandler';
 
 export const deviceStateRouter = new Hono();
 const deviceStateService = new DeviceStateService();
 
 // POST /device-state
-deviceStateRouter.post('/', async (c) => {
-  try {
-    const body = await c.req.json();
-
-    const processItem = async (item: Partial<DeviceStatePayload>) => {
-      if (item.batteryLevel === undefined) {
-        throw new Error('Missing required field: batteryLevel');
+deviceStateRouter.post(
+  '/',
+  createBatchHandler<DeviceStatePayload, Omit<DeviceStatePayload, 'deviceId'>>({
+    logLabel: 'DeviceState API',
+    validateAndMap: (item) => {
+      if (
+        item.batteryLevel === undefined || item.isWifiConnected === undefined
+      ) {
+        throw new Error(
+          'Missing required fields: batteryLevel or isWifiConnected',
+        );
       }
-      if (item.isWifiConnected === undefined) {
-        throw new Error('Missing required field: isWifiConnected');
-      }
-
-      const payload: Omit<DeviceStatePayload, 'deviceId'> = {
+      return {
         batteryLevel: item.batteryLevel,
         isWifiConnected: item.isWifiConnected,
         wifiName: item.wifiName || null,
@@ -42,37 +43,17 @@ deviceStateRouter.post('/', async (c) => {
         timestampIso: item.timestampIso || new Date().toISOString(),
         trigger: item.trigger || null,
       };
-
+    },
+    onProcessItem: async (payload) => {
       await deviceStateService.saveDeviceState(payload);
-
       globalEventEmitter.emit('broadcast', {
         type: 'DEVICE_STATE',
         ...payload,
         deviceId: SINGLE_DEVICE_ID,
       });
-    };
-
-    if (Array.isArray(body)) {
-      console.log(
-        `[DeviceState API] Processing a batch of ${body.length} states`,
-      );
-      for (const item of body) {
-        await processItem(item);
-      }
-    } else {
-      console.log(`[DeviceState API] State received from the device`);
-      await processItem(body);
-    }
-
-    return c.json({ success: true, status: 'Processed successfully' }, 201);
-  } catch (error) {
-    console.error('[DeviceState API ERROR]', (error as Error).message);
-    return c.json({
-      error: 'Bad Request',
-      details: (error as Error).message,
-    }, 400);
-  }
-});
+    },
+  }),
+);
 
 // GET /device-state
 deviceStateRouter.get('/', async (c) => {
