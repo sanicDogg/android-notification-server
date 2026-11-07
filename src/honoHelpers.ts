@@ -44,7 +44,7 @@ export class ClientManager {
     };
     
     this.activeClients.set(clientId, clientData);
-    this.ee.emit('push', { type: 'CLIENT_CONNECTED', client: clientData });
+    this.ee.emit('broadcast', { type: 'CLIENT_CONNECTED', client: clientData });
     
     return clientData;
   }
@@ -52,7 +52,7 @@ export class ClientManager {
   public remove(clientId: string): void {
     if (this.activeClients.has(clientId)) {
       this.activeClients.delete(clientId);
-      this.ee.emit('push', { type: 'CLIENT_DISCONNECTED', clientId });
+      this.ee.emit('broadcast', { type: 'CLIENT_DISCONNECTED', clientId });
     }
   }
 }

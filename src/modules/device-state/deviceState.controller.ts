@@ -1,16 +1,12 @@
+// deviceState.controller.ts
+
 import { Hono } from 'hono';
-import { streamSSE } from 'hono/streaming';
-import { EventEmitter } from 'events';
 import { DeviceStateService, SINGLE_DEVICE_ID } from './deviceState.service';
-import { ClientManager } from '../../honoHelpers';
 import type { DeviceStatePayload } from '../../db/schema';
+import { globalEventEmitter } from '../events.controller';
 
 export const deviceStateRouter = new Hono();
 const deviceStateService = new DeviceStateService();
-const ee = new EventEmitter();
-
-ee.setMaxListeners(100);
-const clientManager = new ClientManager(ee);
 
 // POST /device-state
 deviceStateRouter.post('/', async (c) => {
@@ -45,12 +41,12 @@ deviceStateRouter.post('/', async (c) => {
         timestamp: item.timestamp || Date.now(),
         timestampIso: item.timestampIso || new Date().toISOString(),
         trigger: item.trigger || null,
-        type: item.type || 'DEVICE_STATE',
       };
 
       await deviceStateService.saveDeviceState(payload);
 
-      ee.emit('device_update', {
+      globalEventEmitter.emit('broadcast', {
+        type: 'DEVICE_STATE',
         ...payload,
         deviceId: SINGLE_DEVICE_ID,
       });
@@ -84,18 +80,11 @@ deviceStateRouter.get('/', async (c) => {
   return c.json(state || { message: 'No state recorded yet' });
 });
 
-deviceStateRouter.get('/connections', (c) => {
-  return c.json({
-    total: clientManager.size,
-    clients: clientManager.getAll(),
-  });
-});
-
 // DELETE /device-state
 deviceStateRouter.delete('/', async (c) => {
   try {
     await deviceStateService.deleteDeviceState();
-    ee.emit('device_update', {
+    globalEventEmitter.emit('DEVICE_STATE', {
       type: 'DELETED',
       deviceId: SINGLE_DEVICE_ID,
     });
@@ -106,40 +95,4 @@ deviceStateRouter.delete('/', async (c) => {
       details: (error as Error).message,
     }, 500);
   }
-});
-
-// GET /device-state/events
-deviceStateRouter.get('/events', async (c) => {
-  return streamSSE(c, async (stream) => {
-    const clientId = Math.random().toString(36).substring(2, 11);
-    clientManager.add(clientId, c);
-    console.log(
-      `[DeviceState SSE] Connected: ${clientId}. Total: ${clientManager.size}`,
-    );
-
-    const handler = async (eventData: any) => {
-      await stream.writeSSE({
-        data: JSON.stringify(eventData),
-        event: 'message',
-      });
-    };
-
-    ee.on('device_update', handler);
-
-    await stream.writeSSE({
-      data: JSON.stringify({ type: 'WELCOME', YourId: clientId }),
-      event: 'message',
-    });
-
-    stream.onAbort(() => {
-      ee.off('device_update', handler);
-      clientManager.remove(clientId);
-      console.log(`[DeviceState SSE] Disconnected: ${clientId}`);
-    });
-
-    while (!stream.aborted) {
-      await stream.sleep(30000);
-      await stream.writeSSE({ data: '', event: 'ping' });
-    }
-  });
 });
