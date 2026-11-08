@@ -12,7 +12,7 @@ export class PushesService {
         .onConflictDoUpdate({
           target: pushes.id,
           set: payload,
-        });;
+        });
       console.log(`[DB] Updated or saved push from ${payload.appName}`);
       return { success: true };
     } catch (error) {
@@ -23,7 +23,8 @@ export class PushesService {
 
   async getAllPushes() {
     try {
-      return await db.select().from(pushes).orderBy(desc(pushes.postTime));
+      return await db.select().from(pushes).orderBy(desc(pushes.postTime))
+        .limit(50);
     } catch (error) {
       console.error('[DB_ERROR] Failed to fetch pushes:', error);
       return [];
