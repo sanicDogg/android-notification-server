@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { DeviceStateService, SINGLE_DEVICE_ID } from './deviceState.service';
 import type { DeviceStatePayload } from '../../db/schema';
 import { globalEventEmitter } from '../events.controller';
-import { createBatchHandler } from '../shared/createBatchHandler';
+import { createBatchHandler } from '../common/createBatchHandler';
 
 export const deviceStateRouter = new Hono();
 const deviceStateService = new DeviceStateService();

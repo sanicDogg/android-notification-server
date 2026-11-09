@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { PushesService } from './pushes.service';
 import type { NotificationPayload } from '../../db/schema';
 import { globalEventEmitter } from '../events.controller';
-import { createBatchHandler } from '../shared/createBatchHandler';
+import { createBatchHandler } from '../common/createBatchHandler';
 
 export const pushesRouter = new Hono();
 const pushesService = new PushesService();
