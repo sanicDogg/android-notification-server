@@ -46,5 +46,17 @@ export const deviceState = sqliteTable('device_state', {
   type: text('type').notNull().default('DEVICE_STATE'),
 });
 
+export const sharedFiles = sqliteTable('shared_files', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  size: integer('size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  path: text('path').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
+
+export type SharedFile = typeof sharedFiles.$inferSelect;
+export type NewSharedFile = typeof sharedFiles.$inferInsert;
+
 export type NotificationPayload = typeof pushes.$inferInsert;
 export type DeviceStatePayload = typeof deviceState.$inferInsert;

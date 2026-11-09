@@ -5,6 +5,7 @@ import { logger } from 'hono/logger';
 import { pushesRouter } from './modules/incoming-pushes/pushes.controller';
 import { deviceStateRouter } from './modules/device-state/deviceState.controller';
 import { globalEventsRouter } from './modules/events.controller';
+import { filesRouter } from './modules/files/files.controller';
 
 import { getLaunchedMode } from './utils';
 
@@ -24,6 +25,7 @@ app.use(
 app.route('/api/pushes', pushesRouter);
 app.route('/api/device-state', deviceStateRouter);
 app.route('/api/events', globalEventsRouter);
+app.route('/api/shared', filesRouter);
 
 export default app;
 
