@@ -5,7 +5,7 @@ import { PushesService } from './pushes.service';
 import { globalEventEmitter } from '../events.controller';
 import { createBatchHandler } from '../common/createBatchHandler';
 import { mapAndValidateDeviceState, SINGLE_DEVICE_ID } from '../common/deviceState.shared';
-import { DeviceStateService } from '../device-state/deviceState.service.ts';
+import { DeviceStateService } from '../device-state/deviceState.service';
 import type { NotificationPayload } from '../../db/schema';
 import type { UnvalidatedDeviceState } from '../common/deviceState.shared';
 

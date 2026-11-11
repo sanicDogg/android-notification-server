@@ -7,7 +7,7 @@ import { createBatchHandler } from '../common/createBatchHandler';
 import {
   mapAndValidateDeviceState,
   SINGLE_DEVICE_ID,
-} from '../common/deviceState.shared.ts';
+} from '../common/deviceState.shared';
 import type { DeviceStatePayload, DeviceStateSnapshot } from '../../db/schema';
 
 export const deviceStateRouter = new Hono();

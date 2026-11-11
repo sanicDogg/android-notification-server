@@ -1,7 +1,7 @@
 import { db } from '../../db';
 import { deviceState } from '../../db/schema';
 import { eq } from 'drizzle-orm';
-import { SINGLE_DEVICE_ID } from '../common/deviceState.shared.ts';
+import { SINGLE_DEVICE_ID } from '../common/deviceState.shared';
 import type { DeviceStateSnapshot } from '../../db/schema';
 
 export class DeviceStateService {
