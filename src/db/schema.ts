@@ -60,3 +60,5 @@ export type NewSharedFile = typeof sharedFiles.$inferInsert;
 
 export type NotificationPayload = typeof pushes.$inferInsert;
 export type DeviceStatePayload = typeof deviceState.$inferInsert;
+
+export type DeviceStateSnapshot = Omit<DeviceStatePayload, 'deviceId'>;

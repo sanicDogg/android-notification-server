@@ -1,12 +1,11 @@
 import { db } from '../../db';
 import { deviceState } from '../../db/schema';
 import { eq } from 'drizzle-orm';
-import type { DeviceStatePayload } from '../../db/schema';
-
-export const SINGLE_DEVICE_ID = 'Nothing_phone(1)';
+import { SINGLE_DEVICE_ID } from '../common/deviceState.shared.ts';
+import type { DeviceStateSnapshot } from '../../db/schema';
 
 export class DeviceStateService {
-  async saveDeviceState(payload: Omit<DeviceStatePayload, 'deviceId'>) {
+  async saveDeviceState(payload: DeviceStateSnapshot) {
     try {
       const dataToSave = {
         ...payload,

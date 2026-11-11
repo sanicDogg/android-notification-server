@@ -2,19 +2,37 @@
 
 import { Hono } from 'hono';
 import { PushesService } from './pushes.service';
-import type { NotificationPayload } from '../../db/schema';
 import { globalEventEmitter } from '../events.controller';
 import { createBatchHandler } from '../common/createBatchHandler';
+import { mapAndValidateDeviceState, SINGLE_DEVICE_ID } from '../common/deviceState.shared';
+import { DeviceStateService } from '../device-state/deviceState.service.ts';
+import type { NotificationPayload } from '../../db/schema';
+import type { UnvalidatedDeviceState } from '../common/deviceState.shared';
+
+interface IncomingPushItem extends Partial<NotificationPayload> {
+  id: string;
+  packageName: string;
+  deviceState?: UnvalidatedDeviceState | null;
+}
+interface ProcessedPushItem extends NotificationPayload {
+  deviceState: ReturnType<typeof mapAndValidateDeviceState> | null;
+}
 
 export const pushesRouter = new Hono();
 const pushesService = new PushesService();
 
+const deviceStateService = new DeviceStateService();
+
 // HTTP Post from Android route
 pushesRouter.post(
   '/',
-  createBatchHandler<NotificationPayload, NotificationPayload>({
+  createBatchHandler<IncomingPushItem, ProcessedPushItem>({
     logLabel: 'Pushes API',
-    validateAndMap: (item) => {
+    validateAndMap: (item): ProcessedPushItem => {
+      console.log('pushesRouter_validateAndMap');
+      console.log(item);
+      console.log('-pushesRouter_validateAndMap-');
+
       if (!item.id || !item.packageName) {
         throw new Error('Missing required fields: id or packageName');
       }
@@ -31,11 +49,31 @@ pushesRouter.post(
         channelId: item.channelId || null,
         notificationKey: item.notificationKey || null,
         isOngoing: item.isOngoing ?? false,
+
+        // we adding device-state here to reduce battery impact 
+        // (both notif and state comes in one HTTP request)
+        deviceState: item.deviceState 
+          ? {
+            ...mapAndValidateDeviceState(item.deviceState),
+            trigger: item.deviceState.trigger || 'NOTIFICATION',
+          }
+          : null,
       };
     },
     onProcessItem: async (payload) => {
-      await pushesService.savePush(payload);
-      globalEventEmitter.emit('broadcast', { type: 'NOTIF', ...payload });
+      const { deviceState, ...pushData } = payload;
+
+      await pushesService.savePush(pushData);
+      globalEventEmitter.emit('broadcast', { type: 'NOTIF', ...pushData });
+
+      if (deviceState) {
+        await deviceStateService.saveDeviceState(deviceState);
+        globalEventEmitter.emit('broadcast', {
+          type: 'DEVICE_STATE',
+          ...deviceState,
+          deviceId: SINGLE_DEVICE_ID,
+        });
+      }
     },
   }),
 );

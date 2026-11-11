@@ -1,3 +1,5 @@
+// pushes.service.ts
+
 import { db } from '../../db';
 import { pushes } from '../../db/schema';
 import { desc, eq } from 'drizzle-orm';
@@ -16,7 +18,7 @@ export class PushesService {
       console.log(`[DB] Updated or saved push from ${payload.appName}`);
       return { success: true };
     } catch (error) {
-      console.error('[DB_ERROR] Failed to save push:', error);
+      console.error('[DB_ERROR] Failed to save push with device state:', error);
       throw error;
     }
   }
