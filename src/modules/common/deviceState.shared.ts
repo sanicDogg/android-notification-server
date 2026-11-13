@@ -1,12 +1,14 @@
 // common/deviceState.shared.ts
 
-import type { DeviceStateSnapshot } from '../../db/schema';
+import type { DeviceStateSnapshot, IncomingDeviceState } from '../../db/schema';
 
 export const SINGLE_DEVICE_ID = 'Nothing_phone(1)';
 
 export type UnvalidatedDeviceState = Partial<DeviceStateSnapshot>;
 
-export function mapAndValidateDeviceState(item: UnvalidatedDeviceState): DeviceStateSnapshot {
+export function mapAndValidateDeviceState(
+  item: Partial<IncomingDeviceState>
+): IncomingDeviceState {
   if (item.batteryLevel === undefined || item.isWifiConnected === undefined) {
     throw new Error('Missing required fields: batteryLevel or isWifiConnected');
   }

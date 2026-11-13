@@ -38,8 +38,6 @@ export const deviceState = sqliteTable('device_state', {
   volumeLevel: integer('volume_level').notNull().default(0),
   volumeMax: integer('volume_max').notNull().default(0),
   volumePercent: integer('volume_percent').notNull().default(0),
-  clipboardText: text('clipboard_text'),
-  clipboardCapturedAt: integer('clipboard_captured_at'),
   timestamp: integer('timestamp').notNull(),
   timestampIso: text('timestamp_iso').notNull(),
   trigger: text('trigger'),
@@ -55,10 +53,25 @@ export const sharedFiles = sqliteTable('shared_files', {
   createdAt: integer('created_at').notNull(),
 });
 
+export const clipboardHistory = sqliteTable('clipboard_history', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  deviceId: text('device_id').notNull(),
+  text: text('text').notNull(),
+  capturedAt: integer('captured_at').notNull(),
+});
+
+export type ClipboardEntry = typeof clipboardHistory.$inferSelect;
+export type NewClipboardEntry = typeof clipboardHistory.$inferInsert;
+
 export type SharedFile = typeof sharedFiles.$inferSelect;
 export type NewSharedFile = typeof sharedFiles.$inferInsert;
 
 export type NotificationPayload = typeof pushes.$inferInsert;
 export type DeviceStatePayload = typeof deviceState.$inferInsert;
+
+export type IncomingDeviceState = DeviceStateSnapshot & {
+  clipboardText?: string | null;
+  clipboardCapturedAt?: string | number | null;
+};
 
 export type DeviceStateSnapshot = Omit<DeviceStatePayload, 'deviceId'>;

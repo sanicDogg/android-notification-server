@@ -8,7 +8,7 @@ import {
   mapAndValidateDeviceState,
   SINGLE_DEVICE_ID,
 } from '../common/deviceState.shared';
-import type { DeviceStatePayload, DeviceStateSnapshot } from '../../db/schema';
+import type { IncomingDeviceState } from '../../db/schema';
 
 export const deviceStateRouter = new Hono();
 const deviceStateService = new DeviceStateService();
@@ -16,18 +16,25 @@ const deviceStateService = new DeviceStateService();
 // POST /device-state
 deviceStateRouter.post(
   '/',
-  createBatchHandler<DeviceStatePayload, DeviceStateSnapshot>({
+  createBatchHandler<IncomingDeviceState, IncomingDeviceState>({
     logLabel: 'DeviceState API',
-    validateAndMap: (item) => {
-      return mapAndValidateDeviceState(item);
-    },
+    validateAndMap: (item) => mapAndValidateDeviceState(item),
     onProcessItem: async (payload) => {
-      await deviceStateService.saveDeviceState(payload);
+      const { cleanState, newClipboardEntry } =
+        await deviceStateService.saveDeviceState(payload);
+
       globalEventEmitter.emit('broadcast', {
         type: 'DEVICE_STATE',
-        ...payload,
+        ...cleanState,
         deviceId: SINGLE_DEVICE_ID,
       });
+
+      if (newClipboardEntry) {
+        globalEventEmitter.emit('broadcast', {
+          type: 'CLIPBOARD_UPDATED',
+          data: newClipboardEntry,
+        });
+      }
     },
   }),
 );
@@ -36,6 +43,13 @@ deviceStateRouter.post(
 deviceStateRouter.get('/', async (c) => {
   const state = await deviceStateService.getSingleDeviceState();
   return c.json(state || { message: 'No state recorded yet' });
+});
+
+// GET /device-state/clipboard
+deviceStateRouter.get('/clipboard', async (c) => {
+  const limit = Number(c.req.query('limit')) || 50;
+  const history = await deviceStateService.getClipboardHistory(limit);
+  return c.json(history);
 });
 
 // DELETE /device-state
