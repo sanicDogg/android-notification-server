@@ -117,4 +117,58 @@ export class DeviceStateService {
       throw error;
     }
   }
+
+  async deleteLastClipboardEntry() {
+    try {
+      const [lastEntry] = await db
+        .select({ id: clipboardHistory.id })
+        .from(clipboardHistory)
+        .where(eq(clipboardHistory.deviceId, SINGLE_DEVICE_ID))
+        .orderBy(desc(clipboardHistory.id))
+        .limit(1);
+
+      if (lastEntry) {
+        await db
+          .delete(clipboardHistory)
+          .where(eq(clipboardHistory.id, lastEntry.id));
+      }
+
+      console.log('[DB] Last clipboard entry deleted');
+      return { success: true };
+    } catch (error) {
+      console.error('[DB_ERROR] Failed to delete current clipboard:', error);
+      throw error;
+    }
+  }
+
+  async deleteClipboardEntry(id: number) {
+    try {
+      await db
+        .delete(clipboardHistory)
+        .where(eq(clipboardHistory.id, id));
+
+      console.log(`[DB] Deleted clipboard entry #${id}`);
+      return { success: true };
+    } catch (error) {
+      console.error(
+        `[DB_ERROR] Failed to delete clipboard entry #${id}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async clearAllClipboard() {
+    try {
+      await db
+        .delete(clipboardHistory)
+        .where(eq(clipboardHistory.deviceId, SINGLE_DEVICE_ID));
+
+      console.log('[DB] All clipboard history cleared');
+      return { success: true };
+    } catch (error) {
+      console.error('[DB_ERROR] Failed to clear all clipboard history:', error);
+      throw error;
+    }
+  }
 }

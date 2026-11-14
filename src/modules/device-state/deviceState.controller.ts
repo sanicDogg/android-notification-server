@@ -45,13 +45,6 @@ deviceStateRouter.get('/', async (c) => {
   return c.json(state || { message: 'No state recorded yet' });
 });
 
-// GET /device-state/clipboard
-deviceStateRouter.get('/clipboard', async (c) => {
-  const limit = Number(c.req.query('limit')) || 50;
-  const history = await deviceStateService.getClipboardHistory(limit);
-  return c.json(history);
-});
-
 // DELETE /device-state
 deviceStateRouter.delete('/', async (c) => {
   try {
@@ -66,5 +59,45 @@ deviceStateRouter.delete('/', async (c) => {
       error: 'Internal Server Error',
       details: (error as Error).message,
     }, 500);
+  }
+});
+
+// GET /device-state/clipboard
+deviceStateRouter.get('/clipboard', async (c) => {
+  const limit = Number(c.req.query('limit')) || 50;
+  const history = await deviceStateService.getClipboardHistory(limit);
+  return c.json(history);
+});
+
+// DELETE /device-state/clipboard/:id
+deviceStateRouter.delete('/clipboard/:id', async (c) => {
+  const id = Number(c.req.param('id'));
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'Invalid ID' }, 400);
+  }
+
+  try {
+    await deviceStateService.deleteClipboardEntry(id);
+    globalEventEmitter.emit('broadcast', {
+      type: 'CLIPBOARD_ITEM_DELETED',
+      id,
+    });
+    return c.json({ success: true });
+  } catch (error) {
+    return c.json({ error: (error as Error).message }, 500);
+  }
+});
+
+// DELETE /device-state/clipboard
+deviceStateRouter.delete('/clipboard', async (c) => {
+  try {
+    await deviceStateService.clearAllClipboard();
+    globalEventEmitter.emit('broadcast', {
+      type: 'CLIPBOARD_ALL_CLEARED',
+      deviceId: SINGLE_DEVICE_ID,
+    });
+    return c.json({ success: true });
+  } catch (error) {
+    return c.json({ error: (error as Error).message }, 500);
   }
 });
